@@ -26,7 +26,7 @@ var db = map[string]string{
 
 func TestGet(t *testing.T) {
 	loadCounts := make(map[string]int, len(db))
-	gr := NewGroup("scores", 2<<10, GetterFunc(
+	gr := NewGroup("cache", 2<<10, GetterFunc(
 		func(key string) ([]byte, error) {
 			log.Println("[slow] search key", key)
 			if v, ok := db[key]; ok {
@@ -55,7 +55,7 @@ func TestGet(t *testing.T) {
 }
 
 func TestGetGroup(t *testing.T) {
-	groupName := "scores"
+	groupName := "cache"
 	NewGroup(groupName, 2<<10, GetterFunc(
 		func(key string) (bytes []byte, err error) { return }))
 	if group := GetGroup(groupName); group == nil || group.name != groupName {
