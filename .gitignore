@@ -1,0 +1,9 @@
+# mac files
+.DS_Store
+
+# IDE files
+.vscode
+.idea
+
+# Project files
+vendor
