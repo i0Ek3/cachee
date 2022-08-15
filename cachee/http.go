@@ -10,6 +10,8 @@ import (
 	"sync"
 
 	"github.com/i0Ek3/cachee/chash"
+	pb "github.com/i0Ek3/cachee/pb"
+	"google.golang.org/protobuf/proto"
 )
 
 const (
@@ -61,8 +63,13 @@ func (p *HTTPPool) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	body, err := proto.Marshal(&pb.Response{Value: view.ByteSlice()})
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	w.Header().Set("Content-Type", "application/octet-stream")
-	_, err = w.Write(view.ByteSlice())
+	_, err = w.Write(body)
 	if err != nil {
 		return
 	}
@@ -95,11 +102,11 @@ type httpGetter struct {
 	baseURL string
 }
 
-func (h *httpGetter) Get(group string, key string) ([]byte, error) {
-	url := fmt.Sprintf("%v%v%v", h.baseURL, url.QueryEscape(group), url.QueryEscape(key))
+func (h *httpGetter) Get(in *pb.Request, out *pb.Response) error {
+	url := fmt.Sprintf("%v%v%v", h.baseURL, url.QueryEscape(in.GetGroup()), url.QueryEscape(in.GetKey()))
 	result, err := http.Get(url)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
@@ -109,13 +116,16 @@ func (h *httpGetter) Get(group string, key string) ([]byte, error) {
 	}(result.Body)
 
 	if result.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("server returned: %v", result.Status)
+		return fmt.Errorf("server returned: %v", result.Status)
 	}
 	bytes, err := io.ReadAll(result.Body)
 	if err != nil {
-		return nil, fmt.Errorf("reading response body: %v", err)
+		return fmt.Errorf("reading response body: %v", err)
 	}
-	return bytes, nil
+	if err = proto.Unmarshal(bytes, out); err != nil {
+		return fmt.Errorf("decoding response body: %v", err)
+	}
+	return nil
 }
 
 var _ PeerGetter = (*httpGetter)(nil)
