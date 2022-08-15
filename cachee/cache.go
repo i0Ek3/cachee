@@ -3,7 +3,7 @@ package cachee
 import (
 	"sync"
 
-	"github.com/i0Ek3/cachee/cachee/lru"
+	"github.com/i0Ek3/cachee/lru"
 )
 
 type cache struct {
