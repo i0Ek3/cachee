@@ -55,7 +55,7 @@ func (p *HTTPPool) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	key := parts[1]
 	group := GetGroup(groupName)
 	if group == nil {
-		http.Error(w, "no such groupL: "+groupName, http.StatusNotFound)
+		http.Error(w, "no such group: "+groupName, http.StatusNotFound)
 		return
 	}
 	view, err := group.Get(key)
